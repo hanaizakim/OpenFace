@@ -43,6 +43,25 @@
 #or otherwise, the contributor releases their content to the
 #license and copyright terms herein.
 
+# Detect architecture for architecture-specific paths
+IF(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|amd64")
+    SET(ARCH_LIB_DIR "x86_64-linux-gnu")
+    SET(ARCH_INCLUDE_DIR "x86_64-linux-gnu")
+ELSEIF(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64|arm64")
+    SET(ARCH_LIB_DIR "aarch64-linux-gnu")
+    SET(ARCH_INCLUDE_DIR "aarch64-linux-gnu")
+ELSEIF(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7|ARM")
+    SET(ARCH_LIB_DIR "arm-linux-gnueabihf")
+    SET(ARCH_INCLUDE_DIR "arm-linux-gnueabihf")
+ELSE()
+    # Fallback: try to detect from CMAKE_SIZEOF_VOID_P or use generic paths
+    SET(ARCH_LIB_DIR "")
+    SET(ARCH_INCLUDE_DIR "")
+ENDIF()
+
+MESSAGE(STATUS "Detected architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+MESSAGE(STATUS "Using architecture-specific lib dir: ${ARCH_LIB_DIR}")
+
 SET(Open_BLAS_INCLUDE_SEARCH_PATHS
   $ENV{OpenBLAS_HOME}
   $ENV{OpenBLAS_HOME}/include
@@ -51,14 +70,18 @@ SET(Open_BLAS_INCLUDE_SEARCH_PATHS
   /usr/include/openblas
   /usr/local/include/openblas-base
   /usr/include/openblas-base
-  /usr/include/x86_64-linux-gnu
   /usr/local/include
   /usr/include
   /usr/local/opt/openblas/include
 )
 
+# Add architecture-specific include paths if detected
+IF(ARCH_INCLUDE_DIR)
+    LIST(APPEND Open_BLAS_INCLUDE_SEARCH_PATHS /usr/include/${ARCH_INCLUDE_DIR})
+ENDIF()
+
 SET(Open_BLAS_LIB_SEARCH_PATHS
-        $ENV{OpenBLAS}cd
+        $ENV{OpenBLAS}
         $ENV{OpenBLAS}/lib
         $ENV{OpenBLAS_HOME}
         $ENV{OpenBLAS_HOME}/lib
@@ -69,11 +92,16 @@ SET(Open_BLAS_LIB_SEARCH_PATHS
         /lib64/
         /lib/
         /usr/lib/openblas-base
-        /usr/lib/x86_64-linux-gnu
         /usr/lib64
         /usr/lib
 		/usr/local/opt/openblas/lib
  )
+
+# Add architecture-specific library paths if detected
+IF(ARCH_LIB_DIR)
+    LIST(APPEND Open_BLAS_LIB_SEARCH_PATHS /usr/lib/${ARCH_LIB_DIR})
+    LIST(APPEND Open_BLAS_LIB_SEARCH_PATHS /lib/${ARCH_LIB_DIR})
+ENDIF()
 
 FIND_PATH(OpenBLAS_INCLUDE_DIR NAMES f77blas.h PATHS ${Open_BLAS_INCLUDE_SEARCH_PATHS} NO_DEFAULT_PATH)
 FIND_LIBRARY(OpenBLAS_LIB NAMES openblas PATHS ${Open_BLAS_LIB_SEARCH_PATHS}  NO_DEFAULT_PATH)

@@ -21,6 +21,14 @@ FROM ubuntu:18.04 as ubuntu_base
 LABEL maintainer="Michael McDermott <mikemcdermott23@gmail.com>"
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+
+# Log architecture information for debugging
+RUN echo "Building for TARGETPLATFORM: ${TARGETPLATFORM}" && \
+    echo "Building on BUILDPLATFORM: ${BUILDPLATFORM}" && \
+    uname -m && \
+    dpkg --print-architecture
 
 # todo: minimize this even more
 RUN apt-get update -qq &&\
@@ -86,6 +94,10 @@ FROM cv_deps as openface
 WORKDIR /root/openface
 
 COPY ./ ./
+
+# Copy test script
+COPY docker/test_openblas.sh /root/openface/docker/test_openblas.sh
+RUN chmod +x /root/openface/docker/test_openblas.sh
 
 COPY --from=model_data /data/patch_experts/* \
     /root/openface/lib/local/LandmarkDetector/model/patch_experts/

@@ -37,6 +37,47 @@ There are two variables which can be used to modify the tag, `$DOCKERUSER` and
 `$DOCKERTAG`. DC will automatically tag image as 
 `${DOCKERUSER}/openface:${DOCKERTAG}`
 
+### Architecture Support
+
+The Docker build now supports multiple architectures (amd64 and arm64). By default, 
+it builds for amd64. To build for a specific architecture:
+
+**For amd64 (x86_64):**
+```bash
+TARGETPLATFORM=linux/amd64 podman compose build
+# or
+docker-compose build --build-arg TARGETPLATFORM=linux/amd64
+```
+
+**For arm64 (Apple Silicon, ARM servers):**
+```bash
+TARGETPLATFORM=linux/arm64 podman compose build
+# or
+docker-compose build --build-arg TARGETPLATFORM=linux/arm64
+```
+
+**Using podman with explicit platform:**
+```bash
+podman compose build --platform linux/amd64
+podman compose build --platform linux/arm64
+```
+
+The build will automatically detect the architecture and configure OpenBLAS paths 
+accordingly. Architecture information is logged during the build process for debugging.
+
+### Verifying OpenBLAS Detection
+
+After building, you can verify OpenBLAS detection by running the test script inside the container:
+
+```bash
+podman compose run --rm openface /bin/bash -c "bash /root/openface/docker/test_openblas.sh"
+```
+
+Or if you're already in the container:
+```bash
+bash /root/openface/docker/test_openblas.sh
+```
+
 ## OpenFace service (in progress)
 
 To run OpenFace like a service, you can start the container with bind mounts 
